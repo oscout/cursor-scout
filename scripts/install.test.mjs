@@ -1,4 +1,10 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
@@ -6,8 +12,10 @@ import assert from "node:assert/strict";
 
 import {
   buildScoutCursorMcpEntry,
+  canStartScoutExecutable,
   getCursorMcpConfigPath,
   installCursorScout,
+  resolveScoutLaunch,
   upsertScoutMcpServer,
 } from "./install.mjs";
 
@@ -24,6 +32,36 @@ describe("buildScoutCursorMcpEntry", () => {
         args: ["mcp", "--context-root", "${workspaceFolder}"],
       },
     );
+  });
+});
+
+describe("resolveScoutLaunch", () => {
+  it("skips scout executables that fail to start", () => {
+    const badBinDir = mkdtempSync(join(tmpdir(), "cursor-scout-bad-bin-"));
+    const goodBinDir = mkdtempSync(join(tmpdir(), "cursor-scout-good-bin-"));
+    const badScout = join(badBinDir, "scout");
+    const goodScout = join(goodBinDir, "scout");
+
+    writeFileSync(
+      badScout,
+      "#!/bin/sh\nprintf 'node cannot load bun: modules\\n' >&2\nexit 1\n",
+    );
+    writeFileSync(
+      goodScout,
+      "#!/bin/sh\nif [ \"$1\" = \"--help\" ]; then exit 0; fi\nexit 0\n",
+    );
+    chmodSync(badScout, 0o755);
+    chmodSync(goodScout, 0o755);
+
+    const launch = resolveScoutLaunch({
+      PATH: `${badBinDir}:${goodBinDir}`,
+    });
+
+    assert.equal(canStartScoutExecutable(badScout, { PATH: badBinDir }), false);
+    assert.deepEqual(launch, {
+      command: goodScout,
+      args: ["mcp", "--context-root", "${workspaceFolder}"],
+    });
   });
 });
 

@@ -30,6 +30,10 @@ export function isExecutable(filePath) {
 }
 
 export function resolveExecutableFromSearchPath(names, env = process.env) {
+  return resolveExecutablesFromSearchPath(names, env)[0] ?? null;
+}
+
+export function resolveExecutablesFromSearchPath(names, env = process.env) {
   const pathEntries = (env.PATH ?? "").split(delimiter).filter(Boolean);
   const commonDirectories = [
     join(homedir(), ".local", "bin"),
@@ -37,17 +41,31 @@ export function resolveExecutableFromSearchPath(names, env = process.env) {
     "/opt/homebrew/bin",
     "/usr/local/bin",
   ];
+  const seen = new Set();
+  const matches = [];
 
   for (const directory of [...pathEntries, ...commonDirectories]) {
     for (const name of names) {
       const candidate = join(directory, name);
-      if (isExecutable(candidate)) {
-        return candidate;
+      if (!seen.has(candidate) && isExecutable(candidate)) {
+        seen.add(candidate);
+        matches.push(candidate);
       }
     }
   }
 
-  return null;
+  return matches;
+}
+
+export function canStartScoutExecutable(filePath, env = process.env) {
+  const result = spawnSync(filePath, ["--help"], {
+    env,
+    encoding: "utf8",
+    stdio: "pipe",
+    timeout: 5000,
+  });
+
+  return !result.error && result.status === 0;
 }
 
 export function resolveScoutLaunch(env = process.env) {
@@ -60,6 +78,12 @@ export function resolveScoutLaunch(env = process.env) {
 
   for (const candidate of explicitCandidates) {
     if (isExecutable(candidate)) {
+      if (!canStartScoutExecutable(candidate, env)) {
+        throw new Error(
+          `Configured Scout CLI ${candidate} failed to start. ` +
+            "Set OPENSCOUT_CLI_BIN to a Bun-backed @openscout/scout install.",
+        );
+      }
       return {
         command: candidate,
         args: ["mcp", "--context-root", DEFAULT_CONTEXT_ROOT],
@@ -67,12 +91,13 @@ export function resolveScoutLaunch(env = process.env) {
     }
   }
 
-  const scout = resolveExecutableFromSearchPath(["scout"], env);
-  if (scout) {
-    return {
-      command: scout,
-      args: ["mcp", "--context-root", DEFAULT_CONTEXT_ROOT],
-    };
+  for (const scout of resolveExecutablesFromSearchPath(["scout"], env)) {
+    if (canStartScoutExecutable(scout, env)) {
+      return {
+        command: scout,
+        args: ["mcp", "--context-root", DEFAULT_CONTEXT_ROOT],
+      };
+    }
   }
 
   const bunx = resolveExecutableFromSearchPath(["bunx"], env);

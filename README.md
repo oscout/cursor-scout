@@ -67,6 +67,15 @@ To replace an existing non-matching `scout` entry:
 bun run install:global -- --force
 ```
 
+If Cursor logs `ERR_UNSUPPORTED_ESM_URL_SCHEME` for protocol `bun:`, Cursor is
+launching a stale Node-backed Scout shim. Re-run the installer with `--force` so
+it probes local `scout` commands and writes a Bun-backed `@openscout/scout`
+entry:
+
+```bash
+bun run install:global -- --force
+```
+
 ## Install Per Project
 
 To install into the current project:
