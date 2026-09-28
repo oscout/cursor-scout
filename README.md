@@ -12,9 +12,9 @@ scout mcp
 This repo does not implement a second Scout MCP server. It provides the Cursor
 host packaging, config, docs, and install helpers.
 
-Website: <https://arach.github.io/cursor-scout/>
+Website: <https://oscout.github.io/cursor-scout/>
 
-Repository: <https://github.com/arach/cursor-scout>
+Repository: <https://github.com/oscout/cursor-scout>
 
 ## Included Surfaces
 
