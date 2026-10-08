@@ -1,36 +1,31 @@
-# Cursor Scout
+<p>
+  <a href="https://openscout.app">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/scout-lockup-light.svg" />
+      <img src="assets/scout-lockup-ink.svg" alt="Scout" height="28" />
+    </picture>
+  </a>
+</p>
 
-Cursor Scout packages OpenScout for Cursor through Cursor's MCP configuration.
+# Scout for Cursor
 
-The repository is named `cursor-scout`; the MCP server name is `scout`. Cursor
-launches OpenScout's existing stdio MCP server:
+Give Cursor agents Scout discovery, messages, asks, and broker-backed coordination through Cursor's MCP config.
 
-```bash
-scout mcp
-```
+[Website](https://oscout.github.io/cursor-scout/) · [Install](#install) · [First ask](#first-ask) · [OpenScout](https://openscout.app) · [All integrations](https://github.com/oscout)
 
-This repo does not implement a second Scout MCP server. It provides the Cursor
-host packaging, config, docs, and install helpers.
+<!-- scout-illustration:start -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/scout-illustration-dark.svg" />
+    <img src="assets/scout-illustration-light.svg" alt="Scout connects to an editor agent pane carrying a selected range of code as context." width="100%" />
+  </picture>
+</p>
+<p align="center"><em>Bring Scout coordination into the editor through MCP.</em></p>
+<!-- scout-illustration:end -->
 
-Website: <https://oscout.github.io/cursor-scout/>
+## Install
 
-Repository: <https://github.com/oscout/cursor-scout>
-
-## Included Surfaces
-
-- `.cursor/mcp.json`: project-level Cursor MCP config for local testing
-- `scripts/install.mjs`: installer for Cursor global or project MCP config
-- `docs/index.html`: static project page for GitHub Pages
-
-## Prerequisites
-
-- Cursor or `cursor-agent` with MCP support
-- OpenScout installed and set up locally
-- A running Scout broker
-- `scout` on `PATH`, or Bun available so the installer can fall back to
-  `bunx @openscout/scout`
-
-Recommended local setup:
+Set up Scout first:
 
 ```bash
 bun add -g @openscout/scout
@@ -38,64 +33,47 @@ scout setup
 scout up
 ```
 
-## Install Globally
-
-From this repository:
+Then, from a clone of this repository:
 
 ```bash
+git clone https://github.com/oscout/cursor-scout
+cd cursor-scout
 bun run install:global
 ```
 
-That writes or updates:
+That writes or updates a `scout` MCP server entry in `~/.cursor/mcp.json`.
+Cursor and `cursor-agent` both read that file.
 
-```text
-~/.cursor/mcp.json
-```
-
-with a `scout` MCP server entry. Cursor and `cursor-agent` both use Cursor's
-`mcp.json` configuration.
-
-To preview the write:
-
-```bash
-bun run install:global -- --dry-run
-```
-
-To replace an existing non-matching `scout` entry:
-
-```bash
-bun run install:global -- --force
-```
+- Preview the write: `bun run install:global -- --dry-run`
+- Replace an existing non-matching `scout` entry: `bun run install:global -- --force`
+- Install for one workspace only, into `.cursor/mcp.json`: `bun run install:project`
 
 If Cursor logs `ERR_UNSUPPORTED_ESM_URL_SCHEME` for protocol `bun:`, Cursor is
 launching a stale Node-backed Scout shim. Re-run the installer with `--force` so
 it probes local `scout` commands and writes a Bun-backed `@openscout/scout`
-entry:
+entry.
 
-```bash
-bun run install:global -- --force
-```
+## First ask
 
-## Install Per Project
-
-To install into the current project:
-
-```bash
-bun run install:project
-```
-
-This writes:
+With the `scout` server enabled, ask Cursor's agent in plain language:
 
 ```text
-.cursor/mcp.json
+Use Scout to ask a Codex agent in /path/to/repo to review this selection.
 ```
 
-Project config is useful when you want Scout available only for a specific
-workspace.
+Keep the returned handle for follow-up.
 
-## Manual Config
+## How it works
 
-Cursor's MCP config shape is:
+Cursor launches OpenScout's existing stdio MCP server, `scout mcp`. This repo
+does not implement a second Scout MCP server; it provides the Cursor host
+packaging, config, docs, and install helpers.
+
+- `.cursor/mcp.json`: project-level Cursor MCP config for local testing
+- `scripts/install.mjs`: installer for Cursor global or project MCP config
+- `docs/index.html`: the project page served by GitHub Pages
+
+## Manual config
 
 ```json
 {
@@ -109,8 +87,24 @@ Cursor's MCP config shape is:
 }
 ```
 
-If Cursor cannot find `scout`, use an absolute command path or run the installer,
-which resolves the command from common local install paths.
+If Cursor cannot find `scout`, use an absolute command path or run the
+installer, which resolves the command from common local install paths.
+
+## Requirements
+
+- Cursor or `cursor-agent` with MCP support
+- OpenScout installed and set up locally
+- A running Scout broker
+- `scout` on `PATH`, or Bun available so the installer can fall back to
+  `bunx @openscout/scout`
+
+## Current limits
+
+- Events and MCP notifications only arrive while Cursor keeps the MCP server
+  process alive.
+- Cursor host notification behavior may differ between the editor and
+  `cursor-agent`; durable Scout flights and messages remain the source of truth.
+- This is an experimental local developer package.
 
 ## Validate
 
@@ -119,11 +113,3 @@ bun run check
 cursor-agent mcp list
 cursor-agent mcp list-tools scout
 ```
-
-## Current Limits
-
-- Events and MCP notifications only arrive while Cursor keeps the MCP server
-  process alive.
-- Cursor host notification behavior may differ between the editor and
-  `cursor-agent`; durable Scout flights and messages remain the source of truth.
-- This is an experimental local developer package.

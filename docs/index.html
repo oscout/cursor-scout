@@ -1,403 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cursor Scout - OpenScout for Cursor</title>
-  <meta name="description" content="Cursor MCP configuration for OpenScout - Scout agent discovery, messages, asks, and broker-backed coordination from Cursor.">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scout for Cursor</title>
+  <meta name="description" content="Cursor MCP configuration for Scout: discovery, messages, asks, and durable broker-backed coordination.">
+  <meta name="theme-color" content="#10110f">
+  <link rel="icon" href="assets/scout-glyph-ink.svg" type="image/svg+xml" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="assets/scout-glyph-light.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:      #10100e;
-      --canvas:  #1b1a16;
-      --panel:   #24221d;
-      --text:    #f1ede5;
-      --muted:   #aaa196;
-      --accent:  #d59f55;
-      --border:  #353126;
-      --serif:   'EB Garamond', Georgia, serif;
-      --mono:    'JetBrains Mono', 'Menlo', 'Monaco', monospace;
-    }
-
-    html {
-      color-scheme: only dark;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--serif);
-      font-size: 18px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body {
-      background-image:
-        linear-gradient(hsla(38, 72%, 72%, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, hsla(38, 72%, 72%, 0.04) 1px, transparent 1px);
-      background-size: 32px 32px;
-      min-height: 100vh;
-    }
-
-    .wrap {
-      max-width: 64rem;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    nav {
-      padding: 1.5rem 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-brand {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: var(--text);
-      text-decoration: none;
-      letter-spacing: -0.01em;
-    }
-    .nav-brand .sep { color: var(--muted); }
-
-    .nav-links {
-      display: flex;
-      gap: 1.5rem;
-      list-style: none;
-    }
-    .nav-links a {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .nav-links a:hover { color: var(--accent); }
-
-    .hero {
-      padding: 6rem 0 5rem;
-    }
-
-    .eyebrow {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 1.25rem;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.4rem, 5vw, 3.75rem);
-      font-weight: 500;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      max-width: 18ch;
-    }
-
-    .hero-sub {
-      font-size: 1.2rem;
-      color: var(--muted);
-      max-width: 50ch;
-      margin-bottom: 3rem;
-    }
-
-    .terminal {
-      background: var(--canvas);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      max-width: 42rem;
-      position: relative;
-    }
-
-    .terminal::before,
-    .terminal::after {
-      content: '.';
-      position: absolute;
-      font-family: var(--mono);
-      font-size: 0.6rem;
-      color: var(--border);
-      line-height: 1;
-    }
-    .terminal::before  { top: 6px;  left:  6px; }
-    .terminal::after   { top: 6px;  right: 6px; }
-
-    .terminal-bar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0.65rem 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-    .terminal-title {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--muted);
-      margin-left: auto;
-    }
-
-    .terminal-body {
-      padding: 1.2rem 1.5rem;
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      line-height: 2;
-      overflow-x: auto;
-    }
-    .prompt { color: var(--muted); user-select: none; }
-    .cmd    { color: var(--text); white-space: nowrap; }
-    .out    { color: var(--muted); padding-left: 1.2rem; white-space: nowrap; }
-
-    section {
-      padding: 4.5rem 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .label {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--accent);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 0.9rem;
-    }
-
-    h2 {
-      font-size: clamp(1.6rem, 3vw, 2.25rem);
-      font-weight: 500;
-      margin-bottom: 0.75rem;
-      line-height: 1.2;
-    }
-
-    .lead {
-      font-size: 1.05rem;
-      color: var(--muted);
-      max-width: 55ch;
-      margin-bottom: 2.75rem;
-    }
-
-    .tools {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
-    }
-    @media (max-width: 700px) {
-      .tools { grid-template-columns: 1fr; }
-      .wrap { padding: 0 1.25rem; }
-      nav { align-items: flex-start; gap: 1rem; flex-direction: column; }
-    }
-
-    .tool {
-      background: var(--canvas);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1.5rem;
-    }
-    .tool-name {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      color: var(--accent);
-      margin-bottom: 0.6rem;
-    }
-    .tool-desc {
-      font-size: 0.95rem;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-      max-width: 50rem;
-    }
-    .step {
-      display: flex;
-      gap: 1.75rem;
-    }
-    .step-n {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--accent);
-      flex-shrink: 0;
-      padding-top: 0.25rem;
-      width: 1.5rem;
-    }
-    .step h3 {
-      font-size: 1rem;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    .step p {
-      font-size: 0.95rem;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
-    code {
-      font-family: var(--mono);
-      font-size: 0.82em;
-      color: var(--accent);
-      background: var(--panel);
-      padding: 0.1em 0.35em;
-      border-radius: 2px;
-    }
-
-    .reqs {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-    .reqs li {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .reqs li::before {
-      content: '-';
-      color: var(--accent);
-    }
-
-    footer {
-      padding: 2.5rem 0 3rem;
-      border-top: 1px solid var(--border);
-    }
-    .footer-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-    .footer-row p {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--muted);
-    }
-    .footer-row a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-    .footer-row a:hover { text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..700&amp;display=swap">
+  <link rel="stylesheet" href="assets/scout-pages.css">
 </head>
 <body>
-  <div class="wrap">
+  <header class="bar">
+    <div class="wrap bar-row">
+      <a class="brand" href="./">
+        <img src="assets/scout-lockup-light.svg" alt="Scout" width="74" height="22">
+        <span class="brand-host">Cursor</span>
+      </a>
+      <nav aria-label="Links">
+        <a href="#install">Install</a>
+        <a href="https://github.com/oscout/cursor-scout">GitHub</a>
+        <a href="https://openscout.app">openscout.app</a>
+      </nav>
+    </div>
+  </header>
 
-    <nav>
-      <a class="nav-brand" href="/">cursor<span class="sep"> / </span>scout</a>
-      <ul class="nav-links">
-        <li><a href="https://openscout.app">OpenScout</a></li>
-        <li><a href="https://github.com/oscout/cursor-scout">GitHub</a></li>
-      </ul>
-    </nav>
-
-    <div class="hero">
+  <main class="wrap">
+    <section class="hero">
       <p class="eyebrow">Cursor MCP integration</p>
       <h1>Scout coordination for Cursor.</h1>
-      <p class="hero-sub">A Cursor MCP config that gives Cursor agents Scout discovery, messages, asks, and durable broker-backed coordination.</p>
-
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <span class="terminal-title">install</span>
-        </div>
-        <div class="terminal-body">
-          <div><span class="prompt">$ </span><span class="cmd">git clone https://github.com/oscout/cursor-scout</span></div>
-          <div><span class="prompt">$ </span><span class="cmd">cd cursor-scout</span></div>
-          <div><span class="prompt">$ </span><span class="cmd">bun run install:global</span></div>
-          <div class="out"># Cursor launches scout mcp as a local stdio server</div>
-        </div>
+      <p class="sub">A Cursor MCP config that gives Cursor agents Scout discovery, messages, asks, and durable broker-backed coordination.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#install">Install</a>
+        <a class="btn" href="https://github.com/oscout/cursor-scout">View on GitHub</a>
       </div>
-    </div>
-
-    <section>
-      <p class="label">Tools</p>
-      <h2>Scout MCP inside Cursor.</h2>
-      <p class="lead">Cursor Scout points Cursor at OpenScout's canonical MCP server instead of introducing a second broker or tool implementation.</p>
-
-      <div class="tools">
-        <div class="tool">
-          <p class="tool-name">messages_send</p>
-          <p class="tool-desc">Send a tell, FYI, status update, or wake message to a Scout-known agent or channel.</p>
-        </div>
-        <div class="tool">
-          <p class="tool-name">invocations_ask</p>
-          <p class="tool-desc">Create owned Scout work and return durable conversation, message, flight, and work item identifiers.</p>
-        </div>
-        <div class="tool">
-          <p class="tool-name">agents_search</p>
-          <p class="tool-desc">Discover routable Scout agents and resolve handles when a target is unknown or ambiguous.</p>
-        </div>
-      </div>
+      <figure class="figure">
+        <img src="assets/scout-illustration.svg" width="1600" height="500" alt="Scout connects to an editor agent pane carrying a selected range of code as context." decoding="async">
+        <figcaption>Bring Scout coordination into the editor through MCP.</figcaption>
+      </figure>
     </section>
 
-    <section>
+    <section class="block" id="install">
+      <p class="label">Install</p>
+      <h2>Write the Scout MCP entry.</h2>
+      <pre class="cmd"><code><span class="p" aria-hidden="true">$ </span>git clone https://github.com/oscout/cursor-scout
+<span class="p" aria-hidden="true">$ </span>cd cursor-scout
+<span class="p" aria-hidden="true">$ </span>bun run install:global</code></pre>
+      <p class="note">This writes a <code>scout</code> server into <code>~/.cursor/mcp.json</code>; Cursor launches <code>scout mcp</code> as a local stdio server. Use <code>bun run install:project</code> for a single workspace, or add <code>-- --dry-run</code> to preview.</p>
+    </section>
+
+    <section class="block" id="first-ask">
+      <p class="label">First ask</p>
+      <h2>Ask from the agent pane.</h2>
+      <p class="lead">With the <code>scout</code> server enabled, ask Cursor's agent in plain language. Keep the returned handle for follow-up.</p>
+      <pre class="cmd"><code>Use Scout to ask a Codex agent in /path/to/repo to review this selection.</code></pre>
+    </section>
+
+    <section class="block">
+      <p class="label">Tools</p>
+      <h2>Scout MCP inside Cursor.</h2>
+      <p class="lead">Cursor points at OpenScout's canonical MCP server instead of introducing a second broker or tool implementation.</p>
+      <dl class="rows">
+        <div class="row"><dt>messages_send</dt><dd>Send a tell, FYI, status update, or wake message to a Scout-known agent or channel.</dd></div>
+        <div class="row"><dt>ask</dt><dd>Create owned Scout work and return durable conversation, message, flight, and work item identifiers.</dd></div>
+        <div class="row"><dt>agents_search</dt><dd>Discover routable Scout agents and resolve handles when a target is unknown or ambiguous.</dd></div>
+      </dl>
+    </section>
+
+    <section class="block">
       <p class="label">How it works</p>
       <h2>Cursor launches <code>scout mcp</code>.</h2>
       <p class="lead">The integration stays host-specific and small. Scout owns broker state, routing, and agent identity.</p>
-
-      <div class="steps">
-        <div class="step">
-          <span class="step-n">01</span>
-          <div>
-            <h3>The installer updates Cursor MCP config</h3>
-            <p><code>scripts/install.mjs</code> writes the <code>scout</code> entry into <code>~/.cursor/mcp.json</code> or a project <code>.cursor/mcp.json</code>.</p>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-n">02</span>
-          <div>
-            <h3>Cursor starts the local Scout MCP server</h3>
-            <p>The MCP entry launches <code>scout mcp --context-root ${workspaceFolder}</code> over stdio.</p>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-n">03</span>
-          <div>
-            <h3>Routing stays structured</h3>
-            <p>Use explicit tool fields such as <code>targetLabel</code>, <code>targetAgentId</code>, and <code>channel</code>. Message body text stays payload, not hidden routing metadata.</p>
-          </div>
-        </div>
-      </div>
+      <ol class="steps">
+        <li><h3>The installer updates Cursor MCP config</h3><p><code>scripts/install.mjs</code> writes the <code>scout</code> entry into <code>~/.cursor/mcp.json</code> or a project <code>.cursor/mcp.json</code>.</p></li>
+        <li><h3>Cursor starts the local Scout MCP server</h3><p>The entry launches <code>scout mcp --context-root ${workspaceFolder}</code> over stdio.</p></li>
+        <li><h3>Routing stays structured</h3><p>Use explicit tool fields such as <code>targetLabel</code>, <code>targetAgentId</code>, and <code>channel</code>. Message text stays payload, not hidden routing metadata.</p></li>
+      </ol>
     </section>
 
-    <section>
+    <section class="block">
       <p class="label">Requirements</p>
       <h2>What you need.</h2>
       <ul class="reqs">
         <li>Cursor or <code>cursor-agent</code> with MCP support</li>
         <li>OpenScout installed and set up locally</li>
         <li>A running Scout broker</li>
-        <li><code>scout</code> on PATH, or Bun available for <code>bunx @openscout/scout</code></li>
+        <li><code>scout</code> on <code>PATH</code>, or Bun available for <code>bunx @openscout/scout</code></li>
       </ul>
     </section>
+  </main>
 
-    <footer>
-      <div class="footer-row">
-        <p>Experimental local developer package - <a href="https://github.com/oscout/cursor-scout">github.com/oscout/cursor-scout</a></p>
-        <p><a href="https://openscout.app">openscout.app</a></p>
-      </div>
-      <div class="footer-row" style="margin-top: 1rem;">
-        <p>Cursor MCP host behavior may differ between the editor and cursor-agent; durable Scout messages and flights remain the source of truth.</p>
-      </div>
-    </footer>
-
-  </div>
+  <footer class="wrap foot">
+    <div class="foot-row">
+      <span class="foot-mark"><img src="assets/scout-glyph-light.svg" alt="" width="15" height="17">Experimental local developer package · <a href="https://github.com/oscout/cursor-scout">oscout/cursor-scout</a></span>
+      <p><a href="https://openscout.app">openscout.app</a></p>
+    </div>
+    <p class="fine">Cursor MCP host behavior may differ between the editor and cursor-agent; durable Scout messages and flights remain the source of truth.</p>
+  </footer>
 </body>
 </html>
